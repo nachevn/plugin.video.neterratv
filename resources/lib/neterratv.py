@@ -21,7 +21,7 @@ from xbmcswift import xbmc, xbmcaddon
 import urllib2
 import cookielib
 import os.path
-
+import json
 
 # set debug to generate log entries
 DEBUG = False
@@ -657,33 +657,23 @@ def playLiveStream(tv_username, tv_password, url):
 	#get a neterra class
     Neterra = neterra(tv_username, tv_password)    
     html=Neterra.getTVStream(url)
+    jsonResponse = json.loads(html)
+    tcUrl = jsonResponse['play_link']
     #log(html)
     #parse html for flashplayer link
-    startpoint = html.find('http')
-    isFlash = False
-    if (startpoint == -1):
-        isFlash = True
-        startpoint = html.find('rtmp')
-    endpoint = html.find('file_link')-3
-    #remove crap from string
-    rtmp = html[startpoint:endpoint]                
-    rtmp = rtmp.replace('\\','')
-    if (isFlash == True):
-        startpoint = rtmp.find('/rtplive')
-    else:
-        startpoint = rtmp.find('/live')
-    endpoint = len(rtmp)
-    app = rtmp[startpoint+1:endpoint]
-    startpoint = html.find('file_link')+len('file_link')+3
-    endpoint = html.find(',',startpoint)-1
-    playpath = html[startpoint:endpoint]
-    tcUrl = rtmp
+    app = jsonResponse['issue_name']
+    playpath = jsonResponse['file_link']
+    isLive = jsonResponse['live']
+    if "dvr" in tcUrl:
+        # apapt tcUrl for DVR streams
+        tcUrl = tcUrl.replace('/dvr','/live')
+        tcUrl = tcUrl.replace('DVR&','')
+        tcUrl = tcUrl.replace(':443',':80')
     #log some details
     log('playpath: ' + playpath)
-    log('rtmp: ' + rtmp)
     log('app: ' +app)
     log('tcUrl: '+tcUrl)          
-    url=tcUrl+' '+neterra.SWFPLAYERURL+' playpath='+playpath+' '+neterra.SWFPAGEURL+' '+neterra.SWfVfy+' live=1 ' + neterra.SWFBUFFERDEFAULT+' token='+neterra.TOKEN
+    url=tcUrl+' '+neterra.SWFPLAYERURL+' playpath='+playpath+' '+neterra.SWFPAGEURL+' '+neterra.SWfVfy+' live=' + isLive + ' ' + neterra.SWFBUFFERDEFAULT+' token='+neterra.TOKEN
     xbmc.Player().play(url)
     log('URL: ' + url)
     log('Finished playLiveStream')
