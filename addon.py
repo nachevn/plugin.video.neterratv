@@ -163,7 +163,7 @@ def tvlistlive(id_type):
         if menulist:         
             for item in menulist:
                 items.append({'label': item[0],
-                              'url': plugin.url_for('tvstation_playtv',tvstation_code='issue_id='+item[1])})
+                              'url': plugin.url_for('tvstation_playtv',tvstation_code=item[1])})
         
     if id_type =='movies':
         menulist=neterratv.showMovieProds(plugin.get_setting('username'), plugin.get_setting('password'))        

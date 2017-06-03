@@ -154,7 +154,6 @@ also checks if user is logged in
         startpoint = htmlstr.find(self.ISLOGGEDINSTR)
         #if not logged in
         if (startpoint != -1):            
-            #if (1==1):
             #login
             self.logIn()
             #open page again
@@ -182,7 +181,6 @@ opens url and returns html stream
         startpoint = htmlstr.find(self.ISLOGGEDINSTR)
         #if not logged in
         if (startpoint != -1):
-            #if(1==1):
             #login
             self.logIn()
             #open page again
@@ -301,36 +299,16 @@ returns true if login successful
 ''' 
     def getTVStations(self, html):        
         self.__log('Start getTVStations')
-        self.__log('html: ' + html)
-        startpoint = html.find('tv_choice_result')        
-        endpoint = html.find('"breadcrum_info"')        
-        text = html[startpoint:endpoint]
-        self.__log('text: ' + text)
-        text = text.replace('tv_choice_result','')        
-        text = text.replace('"breadcrum_info"','')        
-        text = text.replace('[','')
-        text = text.replace(']','')
-        text = text.replace('{','')
-        text = text.replace('}','')
-        self.__log('text: ' +  text)
-        links = text.split(',')
+        #self.__log('html: ' + html)
+        jsonResponse = json.loads(html)
+        self.__log("Found channels: " + str(len(jsonResponse['tv_choice_result'])))
         items = []
-        if links:
-            for lnk in links:
-                text=lnk.encode('utf-8')                
-                if (text.find('"product_name"')!=-1):                      
-                    text = text.replace('"','')
-                    text = text.replace(':','')
-                    product_name = text.replace('product_name','')                                                                               
-                if (text.find('issues_id')!=-1):                                            
-                    text = text.replace('"','')
-                    text = text.replace(':','')
-                    issues_id = text.replace('issues_id','')                                        
-                    self.__log('issues_id: ' + issues_id)
-                    self.__log('product_name: ' + product_name.decode('unicode_escape','ignore').encode('utf-8'))                                    
-                    items.append((product_name.decode('unicode_escape','ignore').encode('utf-8'), 'http://www.neterra.tv/content#ignore_list=0&type=live&issue_id='+issues_id))
-        else:
-            items.append('Error no items found', 'Error')      
+        for item in jsonResponse['tv_choice_result']:
+            mediaName = item[0]['media_name']
+            issues_id=item[0]['issues_id']
+            self.__log('issues_id: ' + issues_id)
+            self.__log('product_name: ' + mediaName.encode('utf-8'))
+            items.append((mediaName.encode('utf-8'), issues_id))
         self.__log('Finished getTVStations')
         return items
 
@@ -420,40 +398,16 @@ returns true if login successful
 ''' 
     def getTimeshiftProds(self, html):        
         self.__log('Start getTimeshiftProds')
-        self.__log('html: ' + html)
-        startpoint = html.find('tv_choice_result')        
-        text = html[startpoint:]
-        self.__log('text: ' + text)
-        text = text.replace('tv_choice_result','')
-        text = text.replace('"count":0','')
-        text = text.replace('[','')
-        text = text.replace(']','')
-        text = text.replace('{','')
-        text = text.replace('}','')
-        self.__log('text: ' +  text)
-        links = text.split(',')
+        # self.__log('html: ' + html)
+        jsonResponse = json.loads(html)
+        self.__log("Found timeshift channels: " + str(len(jsonResponse['tv_choice_result'])))
         items = []
-        if links:
-            issues_name=''
-            issues_id =''
-            for lnk in links:
-                text=lnk
-                self.__log('Item: ' + text)                                    
-                if (text.find('issues_name')!=-1):                      
-                    text = text.replace('"','')
-                    text = text.replace(':','')
-                    issues_name = text.replace('issues_name','')                                                                               
-                    self.__log('issues_name: ' + issues_name.decode('unicode_escape','ignore').encode('utf-8'))                                    
-                if (text.find('issues_id')!=-1):                                            
-                    text = text.replace('"','')
-                    text = text.replace(':','')
-                    issues_id = text.replace('issues_id','')                                        
-                    self.__log('issues_id: ' + issues_id)
-                    items.append((issues_name.decode('unicode_escape','ignore').encode('utf-8'), issues_id))
-                    issues_name=''
-                    issues_id =''
-        else:
-            items.append('Error no items found', 'Error')      
+        for item in jsonResponse['tv_choice_result']:
+            mediaName = item[0]['media_name']
+            issues_id = item[0]['issues_id']
+            self.__log('issues_id: ' + issues_id)
+            self.__log('product_name: ' + mediaName.encode('utf-8'))
+            items.append((mediaName.encode('utf-8'), issues_id))
         self.__log('Finished getTimeshiftProds')
         return items
 
@@ -463,50 +417,18 @@ returns true if login successful
 ''' 
     def getVODIssues(self, html):        
         self.__log('Start getVODIssues')
-        self.__log('html: ' + html)       
-        text = html
-        self.__log('text: ' + text)
-        text = text.replace('prods":','')
-        text = text.replace('count','')
-        text = text.replace('[','')
-        text = text.replace(']','')
-        text = text.replace('{','')
-        text = text.replace('}','')
-        self.__log('text: ' +  text)
-        links = text.split(',')
+        #self.__log('VOD Info: ' + html)
         items = []
-        if links:
-            issues_id=''
-            issues_url=''
-            issues_date_aired=''                
-            for lnk in links:
-                text=lnk
-                if (text.find('issues_id')!=-1):                                            
-                    text = text.replace('"','')
-                    text = text.replace(':','')
-                    issues_id = text.replace('issues_id','')                                        
-                    self.__log('issues_id: ' + issues_id)                    
-                if (text.find('issues_date_aired')!=-1):                      
-                    text = text.replace('"','')
-                    text = text.replace(':','')
-                    text = text.replace('issues_date_aired','')
-                    text = text.replace('null','')
-                    issues_date_aired = text                                                           
-                    self.__log('issues_date_aired: ' + issues_date_aired)                                      
-                if (text.find('issues_url')!=-1):                      
-                    text = text.replace('"','')
-                    text = text.replace(':','')
-                    text = text.replace('issues_url','')
-                    issues_url = text.replace('null','')                                       
-                    self.__log('issues_url: ' + issues_url.decode('unicode_escape','ignore').encode('utf-8'))
-                    #.decode('unicode_escape','ignore').encode('utf-8'))                                    
-                    items.append((issues_url.decode('unicode_escape','ignore').encode('utf-8')+' '+issues_date_aired, issues_id))
-                    issues_url=''
-                    issues_date_aired=''
-                    issues_id=''
-        else:
-            items.append('Error no items found', 'Error')      
-        self.__log('Finished getVODIssues')
+        jsonResponse = json.loads(html)
+        for item in jsonResponse['prods']:
+            issues_name = item[0]['issues_name']
+            issues_id = item[0]['issues_id']
+            issues_date_aired_original = item[0]['issues_date_aired_original']
+            self.__log('issues_id: ' + issues_id)
+            self.__log('product_name: ' + issues_name.encode('utf-8'))
+            self.__log('issues_date_aired_original: ' + issues_date_aired_original)
+            items.append(
+                (issues_name.encode('utf-8') + ' (' + issues_date_aired_original.encode('utf-8') + ') ', issues_id))
         return items
 
 
@@ -615,17 +537,12 @@ returns true if login successful
     '''
     returns the stream to live TV
 '''
-    def getTVStream(self,url):
+    def getTVStream(self,issue_id):
         self.__log('Start getTVStream')
         #parse url for id
-        self.__log('url: ' + url)
-        startpoint = url.rfind('issue_id=')
-        #remove / from string
-        text = url[startpoint:len(url)]             
-        self.__log('text: ' + text)   
+        self.__log('issue_id: ' + issue_id)
         self.logIn()
-        #stream = self.openContentStream(self.CONTENTSTREAMURL,text)
-        stream = self.openContentStream(self.CONTENTURL+self.GETSTREAM,text)
+        stream = self.openContentStream(self.CONTENTURL+self.GETSTREAM,'issue_id=' + issue_id)
         self.__log('Finished getTVStream')
         return stream
     
