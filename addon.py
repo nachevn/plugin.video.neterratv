@@ -187,17 +187,17 @@ def tvstation_playtv(tvstation_code, tvstation_name):
     __log('tvstation_playtv started with tvstation_name=%s' %  tvstation_name)
     __log('tvstation_playtv started with tvstation_code=%s' % tvstation_code)
            
-    neterratv.playLiveStream(plugin.get_setting('username'), plugin.get_setting('password'),tvstation_code, tvstation_name)
+    neterratv.playVideoStream(plugin.get_setting('username'), plugin.get_setting('password'),tvstation_code, tvstation_name)
 
 '''
     plays the selected issue
 '''
-@plugin.route('/issue_play/<tvstation_code>')
-def issue_play(tvstation_code):
+@plugin.route('/issue_play/<tvstation_code>/<tvstation_name>')
+def issue_play(tvstation_code, tvstation_name):
     
     __log('issue_play started with string=%s' % tvstation_code)
            
-    neterratv.playIssueStream(plugin.get_setting('username'), plugin.get_setting('password'),tvstation_code)   
+    neterratv.playVideoStream(plugin.get_setting('username'), plugin.get_setting('password'),tvstation_code, tvstation_name)
 
 '''
     gets available recorded streams for select TV station and adds it to list
@@ -244,11 +244,11 @@ def show_recordedstreams(tvstation_code):
     for station in stations:
         if i==0:
             items=[{'label': station[0],
-                    'url': plugin.url_for('issue_play',tvstation_code=station[1])}]
+                    'url': plugin.url_for('issue_play',tvstation_code=station[1], tvstation_name=station[0])}]
             i=i+1
         else:
             items.append({'label': station[0],
-                    'url': plugin.url_for('issue_play',tvstation_code=station[1])})
+                    'url': plugin.url_for('issue_play',tvstation_code=station[1], tvstation_name=station[0])})
 
     __log('show_recordedstreams with string=%s' % tvstation_code)
     return plugin.add_items(items)
@@ -271,11 +271,11 @@ def show_musicstreams(tvstation_code):
     for station in stations:
         if i==0:
             items=[{'label': station[0],
-                    'url': plugin.url_for('issue_play',tvstation_code=station[1])}]
+                    'url': plugin.url_for('issue_play',tvstation_code=station[1], tvstation_name=station[0])}]
             i=i+1
         else:
             items.append({'label': station[0],
-                    'url': plugin.url_for('issue_play',tvstation_code=station[1])})
+                    'url': plugin.url_for('issue_play',tvstation_code=station[1], tvstation_name=station[0])})
 
     __log('show_musicstreams with string=%s' % tvstation_code)
     return plugin.add_items(items)
@@ -299,11 +299,11 @@ def show_movielist(tvstation_code):
     for station in stations:
         if i==0:
             items=[{'label': station[0],
-                    'url': plugin.url_for('issue_play',tvstation_code=station[1])}]
+                    'url': plugin.url_for('issue_play',tvstation_code=station[1], tvstation_name=station[0])}]
             i=i+1
         else:
             items.append({'label': station[0],
-                    'url': plugin.url_for('issue_play',tvstation_code=station[1])})
+                    'url': plugin.url_for('issue_play',tvstation_code=station[1], tvstation_name=station[0])})
 
     __log('show_movielist with string=%s' % tvstation_code)
     return plugin.add_items(items)

@@ -16,7 +16,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from xbmcswift import xbmc, xbmcaddon
+from xbmcswift import xbmc, xbmcaddon, xbmcgui
 
 import urllib2
 import cookielib
@@ -281,36 +281,18 @@ returns true if login successful
 ''' 
     def getMusicProds(self, html):        
         self.__log('Start getMusicProds')
-        self.__log('html: ' + html)
-        startpoint = html.find('prods')
-        endpoint = html.find('count')
-        text = html[startpoint:endpoint]
-        self.__log('text: ' + text)
-        text = text.replace('prods','')
-        text = text.replace('count','')
-        text = text.replace('[','')
-        text = text.replace(']','')
-        text = text.replace('{','')
-        text = text.replace('}','')
-        self.__log('text: ' +  text)
-        links = text.split(',')
+        #self.__log('html: ' + html)
         items = []
-        if links:
-            for lnk in links:
-                text=lnk.encode('utf-8')
-                if (text.find('product_id')!=-1):                                            
-                    text = text.replace('"','')
-                    text = text.replace(':','')
-                    product_id = text.replace('product_id','')                                        
-                    self.__log('product_id: ' + product_id)
-                if (text.find('product_name')!=-1):                      
-                    text = text.replace('"','')
-                    text = text.replace(':','')
-                    product_name = text.replace('product_name','')                                                                               
-                    self.__log('product_name: ' + product_name.decode('unicode_escape','ignore').encode('utf-8'))                                    
-                    items.append((product_name.decode('unicode_escape','ignore').encode('utf-8'), product_id))
+        jsonResponse = json.loads(html)
+        if len(jsonResponse['prods']) > 0:
+            for item in jsonResponse['prods']:
+                product_name = item[0]['product_name']
+                product_id = item[0]['product_id']
+                self.__log('product_name: ' + product_name.encode('utf-8'))
+                self.__log('product_id: ' + product_id)
+                items.append((product_name.encode('utf-8'), product_id))
         else:
-            items.append('Error no items found', 'Error')      
+            items.append('Error no items found', 'Error')
         self.__log('Finished getMusicProds')
         return items
     
@@ -319,40 +301,18 @@ returns true if login successful
 ''' 
     def getMovieProds(self, html):        
         self.__log('Start getMovieProds')
-        self.__log('html: ' + html)
-        startpoint = html.find('"prods":[[')        
-        text = html[startpoint:]
-        self.__log('text: ' + text)
-        text = text.replace('"prods":','')       
-        text = text.replace('[','')
-        text = text.replace(']','')
-        text = text.replace('{','')
-        text = text.replace('}','')
-        self.__log('text: ' +  text)
-        links = text.split(',')
+        #self.__log('html: ' + html)
         items = []
-        if links:
-            product_name=''
-            product_id =''
-            for lnk in links:
-                text=lnk
-                self.__log('Item: ' + text)                                    
-                if (text.find('product_id')!=-1):                                            
-                    text = text.replace('"','')
-                    text = text.replace(':','')
-                    product_id = text.replace('product_id','')                                        
-                    self.__log('product_id: ' + product_id)
-                if (text.find('product_name')!=-1):                      
-                    text = text.replace('"','')
-                    text = text.replace(':','')
-                    product_name = text.replace('product_name','')                                                                               
-                    self.__log('product_name: ' + product_name.decode('unicode_escape','ignore').encode('utf-8'))                                    
-                    items.append((product_name.decode('unicode_escape','ignore').encode('utf-8'), product_id))
-                    product_name=''
-                    product_id =''
+        jsonResponse = json.loads(html)
+        if len(jsonResponse['prods']) > 0:
+            for item in jsonResponse['prods']:
+                product_name = item[0]['product_name']
+                product_id = item[0]['product_id']
+                self.__log('product_name: ' + product_name.encode('utf-8'))
+                self.__log('product_id: ' + product_id)
+                items.append((product_name.encode('utf-8'), product_id))
         else:
-            items.append('Error no items found', 'Error')      
-            self.__log('Finished getMovieProds')
+            items.append('Error no items found', 'Error')
         return items
 
     '''
@@ -478,26 +438,15 @@ returns true if login successful
         return items
   
     '''
-    returns the stream to live TV
+    returns the json response to an issue_id
 '''
-    def getTVStream(self,issue_id):
-        self.__log('Start getTVStream')
-        #parse url for id
+    def getJsonFromIssueID(self,issue_id):
+        self.__log('Start getJsonFromIssueID')
         self.__log('issue_id: ' + issue_id)
         self.logIn()
         stream = self.openContentStream(self.CONTENTURL+self.GETSTREAM,'issue_id=' + issue_id)
-        self.__log('Finished getTVStream')
-        return stream
-    
-    def getIssueStream(self,url):
-        self.__log('Start getIssueStream')
-        #parse url for id
-        self.__log('url: ' + url)        
-        text = 'issue_id='+url             
-        self.__log('text: ' + text)   
-        self.logIn()
-        stream = self.openContentStream(self.CONTENTURL+self.GETSTREAM,text)
-        self.__log('Finished getIssueStream')
+        self.__log('Issue json response: ' + stream)
+        self.__log('Finished getJsonFromIssueID')
         return stream
 '''
     end of neterratv class
@@ -507,21 +456,19 @@ returns true if login successful
     Public methods in lib neterra 
     Note: These methods are not part of the neterratv class
 '''
-   
 
 '''
-    plays live stream
+    play video stream
 '''
-def playLiveStream(tv_username, tv_password, issue_id, tvstation_name):
-    log('Start playLiveStream')
+def playVideoStream(tv_username, tv_password, issue_id, tvstation_name):
+    log('Start playVideoStream')
     # get a neterra class
     Neterra = neterra(tv_username, tv_password)
-    html = Neterra.getTVStream(issue_id)
+    html = Neterra.getJsonFromIssueID(issue_id)
     jsonResponse = json.loads(html)
-    tcUrl = jsonResponse['play_link']
-    # log(html)
+    log('playVideoStream json response: ' + str(jsonResponse))
     # parse html for flashplayer link
-    app = jsonResponse['issue_name']
+    tcUrl = jsonResponse['play_link']
     playpath = jsonResponse['file_link']
     isLive = jsonResponse['live']
     if "dvr" in tcUrl:
@@ -531,54 +478,13 @@ def playLiveStream(tv_username, tv_password, issue_id, tvstation_name):
         tcUrl = tcUrl.replace(':443', ':80')
     # log some details
     log('playpath: ' + playpath)
-    log('app: ' + app)
     log('tcUrl: ' + tcUrl)
-    playUrl = tcUrl + ' ' + neterra.SWFPLAYERURL + ' playpath=' + playpath + ' ' + neterra.SWFPAGEURL + ' ' + neterra.SWfVfy + ' live=' + isLive + ' ' + neterra.SWFBUFFERDEFAULT + ' token=' + neterra.TOKEN
+    playUrl = tcUrl + ' ' + neterra.SWFPLAYERURL + ' playpath=' + playpath + ' ' + neterra.SWFPAGEURL + ' ' + neterra.SWfVfy + ' live=' + isLive + ' ' + neterra.SWFBUFFERDEFAULT
     listitem = xbmcgui.ListItem(label=str(tvstation_name))
     xbmc.Player().play(playUrl, listitem)
     log('URL: ' + playUrl)
-    log('Finished playLiveStream')
+    log('Finished playVideoStream')
     html = ''
-    return html
-
-'''
-    play issue stream
-'''
-def playIssueStream(tv_username, tv_password, url):
-    log('Start playIssueStream')
-    #get a neterra class
-    Neterra = neterra(tv_username, tv_password)    
-    html=Neterra.getIssueStream(url)
-    #log(html)
-    #parse html for flashplayer link
-    startpoint = html.find('http')
-    isFlash = False
-    if (startpoint == -1):
-        isFlash = True
-        startpoint = html.find('rtmp')
-    endpoint = html.find('file_link')-3
-    #remove / from string
-    rtmp = html[startpoint:endpoint]
-    rtmp = rtmp.replace('\\','')
-    startpoint = rtmp.find('/vod')
-    endpoint = len(rtmp)
-    app = rtmp[startpoint+1:endpoint]
-    startpoint = html.find('file_link')+len('file_link')+3
-    endpoint = html.find(',',startpoint)-1
-    playpath = html[startpoint:endpoint]
-    playpath = playpath.replace('\\','')
-    tcUrl = rtmp
-    #log some details
-    log('playpath: ' + playpath)
-    log('rtmp: ' + rtmp)
-    log('app: ' +app)
-    log('tcUrl: '+tcUrl)
-    url=rtmp+' app='+app+' tcUrl='+tcUrl+' '+neterra.SWFPLAYERURL+' playpath='+playpath+' '+neterra.SWFPAGEURL+' live=0 ' + neterra.SWFBUFFERDEFAULT+' token='+neterra.TOKEN
-    #call player
-    xbmc.Player().play(url)
-    log('URL: ' + url)
-    log('Finished playIssueStream')
-    html=''
     return html
 
 '''
