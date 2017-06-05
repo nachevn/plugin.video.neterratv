@@ -3,6 +3,10 @@
     <!-- General entries -->
     <string id="30000">Seite</string>
     <string id="30001">Suche</string>
+
+    <!-- Login information entries -->
+    <string id="30200">Benutzername</string>
+    <string id="30210">Passwort</string>
     
     <!-- Settings -->
     <string id="30010">ViewMode auf Thumbnail setzen</string>
