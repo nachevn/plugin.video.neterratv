@@ -323,15 +323,18 @@ returns true if login successful
         #self.__log('VOD Info: ' + html)
         items = []
         jsonResponse = json.loads(html)
-        for item in jsonResponse['prods']:
-            issues_name = item[0]['issues_name']
-            issues_id = item[0]['issues_id']
-            issues_date_aired_original = item[0]['issues_date_aired_original']
-            self.__log('issues_id: ' + issues_id)
-            self.__log('product_name: ' + issues_name.encode('utf-8'))
-            self.__log('issues_date_aired_original: ' + issues_date_aired_original)
-            items.append(
-                (issues_name.encode('utf-8') + ' (' + issues_date_aired_original.encode('utf-8') + ') ', issues_id))
+        if len(jsonResponse['prods']) > 0:
+            for item in jsonResponse['prods']:
+                issues_name = item[0]['issues_name']
+                issues_id = item[0]['issues_id']
+                issues_date_aired_original = item[0]['issues_date_aired_original']
+                self.__log('issues_id: ' + issues_id)
+                self.__log('product_name: ' + issues_name.encode('utf-8'))
+                self.__log('issues_date_aired_original: ' + issues_date_aired_original)
+                items.append(
+                    (issues_name.encode('utf-8') + ' (' + issues_date_aired_original.encode('utf-8') + ') ', issues_id))
+        else:
+            items.append('Error no items found', 'Error')
         return items
 
 
@@ -340,49 +343,25 @@ returns true if login successful
 ''' 
     def getMusicIssues(self, html):        
         self.__log('Start getMusicIssues')
-        self.__log('html: ' + html)        
-        text = html#[startpoint:endpoint]
-        self.__log('text: ' + text)
-        text = text.replace('prods":','')
-        text = text.replace('count','')
-        text = text.replace('[','')
-        text = text.replace(']','')
-        text = text.replace('{','')
-        text = text.replace('}','')
-        self.__log('text: ' +  text)
-        links = text.split(',')
+        #self.__log('html: ' + html)
         items = []
-        if links:
-            issues_id=''
-            issues_url=''
-            issues_date_aired=''                
-            for lnk in links:
-                text=lnk
-                if (text.find('issues_id')!=-1):                                            
-                    text = text.replace('"','')
-                    text = text.replace(':','')
-                    issues_id = text.replace('issues_id','')                                        
-                    self.__log('issues_id: ' + issues_id)                    
-                if (text.find('issues_date_aired')!=-1):                      
-                    text = text.replace('"','')
-                    text = text.replace(':','')
-                    text = text.replace('issues_date_aired','')
-                    text = text.replace('null','')
-                    issues_date_aired = text                                                           
-                    self.__log('issues_date_aired: ' + issues_date_aired)                                      
-                if (text.find('issues_url')!=-1):                      
-                    text = text.replace('"','')
-                    text = text.replace(':','')
-                    text = text.replace('issues_url','')
-                    issues_url = text.replace('null','')                                       
-                    self.__log('issues_url: ' + issues_url.decode('unicode_escape','ignore').encode('utf-8'))
-                    #.decode('unicode_escape','ignore').encode('utf-8'))                                    
-                    items.append((issues_url.decode('unicode_escape','ignore').encode('utf-8')+' '+issues_date_aired, issues_id))
-                    issues_url=''
-                    issues_date_aired=''
-                    issues_id=''
+        jsonResponse = json.loads(html)
+        log("getMusicIssues json response: " + str(jsonResponse))
+        if len(jsonResponse['prods']) > 0:
+            for item in jsonResponse['prods']:
+                issues_name = item[0]['issues_name']
+                issues_url = item[0]['issues_url']
+                issues_id = item[0]['issues_id']
+                product_duration = item[0]['product_duration']
+                self.__log('issues_name: ' + issues_name.encode('utf-8'))
+                self.__log('issues_id: ' + issues_id)
+                self.__log('product_name (issues_url): ' + issues_url.encode('utf-8'))
+                self.__log('product_duration: ' + product_duration)
+                items.append(
+                    (issues_name.encode('utf-8') + ' - ' +issues_url.encode('utf-8'), issues_id))
+                #items.append((issues_url.decode('unicode_escape','ignore').encode('utf-8')+' '+issues_date_aired, issues_id))
         else:
-            items.append('Error no items found', 'Error')      
+            items.append('Error no items found', 'Error')
         self.__log('Finished getMusicIssues')
         return items
 
@@ -391,49 +370,25 @@ returns true if login successful
 ''' 
     def getMovieIssues(self, html):        
         self.__log('Start getMovieIssues')
-        self.__log('html: ' + html)       
-        text = html
-        self.__log('text: ' + text)
-        text = text.replace('prods":','')
-        text = text.replace('count','')
-        text = text.replace('[','')
-        text = text.replace(']','')
-        text = text.replace('{','')
-        text = text.replace('}','')
-        self.__log('text: ' +  text)
-        links = text.split(',')
+        self.__log('html: ' + html)
         items = []
-        if links:
-            issues_id=''
-            issues_url=''
-            issues_date_aired=''                
-            for lnk in links:
-                text=lnk
-                if (text.find('issues_id')!=-1):                                            
-                    text = text.replace('"','')
-                    text = text.replace(':','')
-                    issues_id = text.replace('issues_id','')                                        
-                    self.__log('issues_id: ' + issues_id)                    
-                if (text.find('issues_date_aired')!=-1):                      
-                    text = text.replace('"','')
-                    text = text.replace(':','')
-                    text = text.replace('issues_date_aired','')
-                    text = text.replace('null','')
-                    issues_date_aired = text                                                           
-                    self.__log('issues_date_aired: ' + issues_date_aired)                                      
-                if (text.find('issues_url')!=-1):                      
-                    text = text.replace('"','')
-                    text = text.replace(':','')
-                    text = text.replace('issues_url','')
-                    issues_url = text.replace('null','')                                       
-                    self.__log('issues_url: ' + issues_url.decode('unicode_escape','ignore').encode('utf-8'))
-                    #.decode('unicode_escape','ignore').encode('utf-8'))                                    
-                    items.append((issues_url.decode('unicode_escape','ignore').encode('utf-8')+' '+issues_date_aired, issues_id))
-                    issues_url=''
-                    issues_date_aired=''
-                    issues_id=''
+        jsonResponse = json.loads(html)
+        log("getMusicIssues json response: " + str(jsonResponse))
+        if len(jsonResponse['prods']) > 0:
+            for item in jsonResponse['prods']:
+                issues_name = item[0]['issues_name']
+                issues_url = item[0]['issues_url']
+                issues_id = item[0]['issues_id']
+                product_duration = item[0]['product_duration']
+                self.__log('issues_name: ' + issues_name.encode('utf-8'))
+                self.__log('issues_id: ' + issues_id)
+                self.__log('product_name (issues_url): ' + issues_url.encode('utf-8'))
+                self.__log('product_duration: ' + product_duration)
+                items.append(
+                    (issues_name.encode('utf-8') + ' - ' +issues_url.encode('utf-8'), issues_id))
+                #items.append((issues_url.decode('unicode_escape','ignore').encode('utf-8')+' '+issues_date_aired, issues_id))
         else:
-            items.append('Error no items found', 'Error')      
+            items.append('Error no items found', 'Error')
         self.__log('Finished getMovieIssues')
         return items
   
