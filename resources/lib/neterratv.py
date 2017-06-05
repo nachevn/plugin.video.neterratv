@@ -512,11 +512,11 @@ returns true if login successful
 '''
     plays live stream
 '''
-def playLiveStream(tv_username, tv_password, url):
+def playLiveStream(tv_username, tv_password, issue_id, tvstation_name):
     log('Start playLiveStream')
     # get a neterra class
     Neterra = neterra(tv_username, tv_password)
-    html = Neterra.getTVStream(url)
+    html = Neterra.getTVStream(issue_id)
     jsonResponse = json.loads(html)
     tcUrl = jsonResponse['play_link']
     # log(html)
@@ -533,9 +533,10 @@ def playLiveStream(tv_username, tv_password, url):
     log('playpath: ' + playpath)
     log('app: ' + app)
     log('tcUrl: ' + tcUrl)
-    url = tcUrl + ' ' + neterra.SWFPLAYERURL + ' playpath=' + playpath + ' ' + neterra.SWFPAGEURL + ' ' + neterra.SWfVfy + ' live=' + isLive + ' ' + neterra.SWFBUFFERDEFAULT + ' token=' + neterra.TOKEN
-    xbmc.Player().play(url)
-    log('URL: ' + url)
+    playUrl = tcUrl + ' ' + neterra.SWFPLAYERURL + ' playpath=' + playpath + ' ' + neterra.SWFPAGEURL + ' ' + neterra.SWfVfy + ' live=' + isLive + ' ' + neterra.SWFBUFFERDEFAULT + ' token=' + neterra.TOKEN
+    listitem = xbmcgui.ListItem(label=str(tvstation_name))
+    xbmc.Player().play(playUrl, listitem)
+    log('URL: ' + playUrl)
     log('Finished playLiveStream')
     html = ''
     return html

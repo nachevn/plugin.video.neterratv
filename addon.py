@@ -144,7 +144,7 @@ def tvlistlive(id_type):
         if menulist:         
             for item in menulist:
                 items.append({'label': item[0],
-                              'url': plugin.url_for('tvstation_playtv',tvstation_code=item[1])})                
+                              'url': plugin.url_for('tvstation_playtv', tvstation_code=item[1], tvstation_name=item[0])})
     if id_type =='vod':
         menulist=neterratv.showVODStations(plugin.get_setting('username'), plugin.get_setting('password'))        
         if menulist:         
@@ -163,7 +163,7 @@ def tvlistlive(id_type):
         if menulist:         
             for item in menulist:
                 items.append({'label': item[0],
-                              'url': plugin.url_for('tvstation_playtv',tvstation_code=item[1])})
+                              'url': plugin.url_for('tvstation_playtv',tvstation_code=item[1], tvstation_name=item[0])})
         
     if id_type =='movies':
         menulist=neterratv.showMovieProds(plugin.get_setting('username'), plugin.get_setting('password'))        
@@ -181,12 +181,13 @@ def tvlistlive(id_type):
 '''
     plays the select live TV
 '''
-@plugin.route('/tvstation_playtv/<tvstation_code>')
-def tvstation_playtv(tvstation_code):
-    
-    __log('tvstation_playtv started with string=%s' % tvstation_code)
+@plugin.route('/tvstation_playtv/<tvstation_code>/<tvstation_name>')
+def tvstation_playtv(tvstation_code, tvstation_name):
+
+    __log('tvstation_playtv started with tvstation_name=%s' %  tvstation_name)
+    __log('tvstation_playtv started with tvstation_code=%s' % tvstation_code)
            
-    neterratv.playLiveStream(plugin.get_setting('username'), plugin.get_setting('password'),tvstation_code)    
+    neterratv.playLiveStream(plugin.get_setting('username'), plugin.get_setting('password'),tvstation_code, tvstation_name)
 
 '''
     plays the selected issue
