@@ -39,7 +39,7 @@ class neterra:
     PLUGINID = 'plugin.video.neterratv'
      
     COOKIEFILE = 'cookies.lwp' #file to store cookie information
-    USERAGENT = {'User-agent' : 'Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)'}
+    USERAGENT = {'User-agent' : 'Mozilla/5.0 (Windows NT 6.1; Win64; x64)'}
     
     LIVE = 'live'
     VOD = 'vod'
@@ -101,7 +101,7 @@ called every time the script runs
         self.openSite(self.MAINURL)        
         self.__log('finished __init__')
         
-        '''
+    '''
 init the cookie handle for the class
 it loads information from cookie file
 '''
@@ -136,8 +136,34 @@ updates the cookie to cookie file
         self.__log('Start updateCookie')
         self.__cj__.save(self.__cookiepath__)
         self.__log('Finished updateCookie')
-        
-        '''
+
+    '''
+login into the neterra tv webpage
+returns true if login successful
+'''
+    def logIn(self):
+        self.__log('Start logIn')
+        isLoggedIn = False
+        urlopen = urllib2.urlopen
+        request = urllib2.Request
+        theurl = self.LOGINURL
+        self.__log('----URL request started for: ' + theurl + ' ----- ')
+        txdata = 'login_username=' + self.__username__ + '&login_password=' + self.__password__ + '&login_attempt=1'
+        req = request(self.LOGINURL, txdata, self.USERAGENT)
+        self.__log('----URL requested: ' + theurl + ' txdata: ' + txdata)
+        # create a request object
+        handle = urlopen(req)
+        link = handle.read()
+        self.__log(link)
+        self.__log('----URL request finished for: ' + theurl + ' ----- ')
+        self.updateCookie()
+        startpoint = link.find(self.ISLOGGEDINSTR)
+        if (startpoint != -1):
+            isLoggedIn = True
+        self.__log('Finished logIn')
+        return isLoggedIn
+
+    '''
 opens url and returns html stream 
 also checks if user is logged in
 '''
@@ -190,36 +216,30 @@ opens url and returns html stream
         self.__log('Finished ContenStream: ' + theurl)
         self.__log('htmlstr: ' + htmlstr)
         return htmlstr
-    
 
     '''
-login into the neterra tv webpage
-returns true if login successful
-'''    
-    def logIn(self):
-        self.__log('Start logIn')
-        isLoggedIn = False
-        urlopen = urllib2.urlopen
-        request = urllib2.Request
-        theurl = self.LOGINURL
-        self.__log('----URL request started for: ' + theurl + ' ----- ')
-        txdata = 'login_username=' + self.__username__ + '&login_password=' + self.__password__ + '&login_attempt=1'
-        req = request(self.LOGINURL, txdata, self.USERAGENT)
-        self.__log('----URL requested: ' + theurl + ' txdata: ' + txdata)
-        # create a request object
-        handle = urlopen(req)     
-        link = handle.read() 
-        self.__log(link)
-        self.__log('----URL request finished for: ' + theurl + ' ----- ')
-        self.updateCookie()
-        startpoint = link.find(self.ISLOGGEDINSTR)
-        if (startpoint != -1):
-            isLoggedIn = True
-        self.__log('Finished logIn')        
-        return isLoggedIn
-        
+returns the list of live/timeshift streams
+'''
+    def getTVStreams(self, html):
+        self.__log('Start getTVStreams')
+        # self.__log('html: ' + html)
+        jsonResponse = json.loads(html)
+        self.__log("Found channels: " + str(len(jsonResponse['tv_choice_result'])))
+        items = []
+        if len(jsonResponse['prods']) > 0:
+            for item in jsonResponse['tv_choice_result']:
+                mediaName = item[0]['media_name']
+                issues_id = item[0]['issues_id']
+                self.__log('issues_id: ' + issues_id)
+                self.__log('media_name: ' + mediaName.encode('utf-8'))
+                items.append((mediaName.encode('utf-8'), issues_id))
+        else:
+            items.append('Error no items found', 'Error')
+        self.__log('Finished getTVStreams')
+        return items
+
     '''
-    returns list with VOD stations 
+returns list of VOD stations 
 ''' 
     def getVODStations(self, html):        
         self.__log('Start getVODStations')
@@ -239,9 +259,9 @@ returns true if login successful
         return items
 
     '''
-    returns list with VOD prods 
-''' 
-    def getVODProds(self, html):        
+returns list with VOD products
+'''
+    def getVODProds(self, html):
         self.__log('Start getVODProds')
         self.__log('html: ' + html)
         items = []
@@ -254,69 +274,12 @@ returns true if login successful
                 self.__log('product_id: ' + product_id)
                 items.append((product_name.encode('utf-8'), product_id))
         else:
-            items.append('Error no items found', 'Error')      
+            items.append('Error no items found', 'Error')
         self.__log('Finished getVODProds')
         return items
 
     '''
-    returns the list of live/timeshift streams
-'''
-    def getTVStreams(self, html):
-        self.__log('Start getTVStreams')
-        #self.__log('html: ' + html)
-        jsonResponse = json.loads(html)
-        self.__log("Found channels: " + str(len(jsonResponse['tv_choice_result'])))
-        items = []
-        for item in jsonResponse['tv_choice_result']:
-            mediaName = item[0]['media_name']
-            issues_id=item[0]['issues_id']
-            self.__log('issues_id: ' + issues_id)
-            self.__log('product_name: ' + mediaName.encode('utf-8'))
-            items.append((mediaName.encode('utf-8'), issues_id))
-        self.__log('Finished getTVStreams')
-        return items
-
-    '''
-    returns list with Music prods 
-''' 
-    def getMusicProds(self, html):        
-        self.__log('Start getMusicProds')
-        #self.__log('html: ' + html)
-        items = []
-        jsonResponse = json.loads(html)
-        if len(jsonResponse['prods']) > 0:
-            for item in jsonResponse['prods']:
-                product_name = item[0]['product_name']
-                product_id = item[0]['product_id']
-                self.__log('product_name: ' + product_name.encode('utf-8'))
-                self.__log('product_id: ' + product_id)
-                items.append((product_name.encode('utf-8'), product_id))
-        else:
-            items.append('Error no items found', 'Error')
-        self.__log('Finished getMusicProds')
-        return items
-    
-    '''
-    returns list with movie prods 
-''' 
-    def getMovieProds(self, html):        
-        self.__log('Start getMovieProds')
-        #self.__log('html: ' + html)
-        items = []
-        jsonResponse = json.loads(html)
-        if len(jsonResponse['prods']) > 0:
-            for item in jsonResponse['prods']:
-                product_name = item[0]['product_name']
-                product_id = item[0]['product_id']
-                self.__log('product_name: ' + product_name.encode('utf-8'))
-                self.__log('product_id: ' + product_id)
-                items.append((product_name.encode('utf-8'), product_id))
-        else:
-            items.append('Error no items found', 'Error')
-        return items
-
-    '''
-    returns list with VOD issues 
+returns list with VOD issues 
 ''' 
     def getVODIssues(self, html):
         self.__log('Start getVODIssues')
@@ -327,82 +290,27 @@ returns true if login successful
             for item in jsonResponse['prods']:
                 issues_name = item[0]['issues_name']
                 issues_id = item[0]['issues_id']
+                issues_url = item[0]['issues_url']
                 issues_date_aired_original = item[0]['issues_date_aired_original']
-                self.__log('issues_id: ' + issues_id)
-                self.__log('product_name: ' + issues_name.encode('utf-8'))
-                self.__log('issues_date_aired_original: ' + issues_date_aired_original)
-                items.append(
-                    (issues_name.encode('utf-8') + ' (' + issues_date_aired_original.encode('utf-8') + ') ', issues_id))
-        else:
-            items.append('Error no items found', 'Error')
-        return items
-
-
-    '''
-    returns list with music issues 
-''' 
-    def getMusicIssues(self, html):        
-        self.__log('Start getMusicIssues')
-        #self.__log('html: ' + html)
-        items = []
-        jsonResponse = json.loads(html)
-        log("getMusicIssues json response: " + str(jsonResponse))
-        if len(jsonResponse['prods']) > 0:
-            for item in jsonResponse['prods']:
-                issues_name = item[0]['issues_name']
-                issues_url = item[0]['issues_url']
-                issues_id = item[0]['issues_id']
                 product_duration = item[0]['product_duration']
                 self.__log('issues_name: ' + issues_name.encode('utf-8'))
-                self.__log('issues_id: ' + issues_id)
-                self.__log('product_name (issues_url): ' + issues_url.encode('utf-8'))
-                self.__log('product_duration: ' + product_duration)
-                items.append(
-                    (issues_name.encode('utf-8') + ' - ' +issues_url.encode('utf-8'), issues_id))
-                #items.append((issues_url.decode('unicode_escape','ignore').encode('utf-8')+' '+issues_date_aired, issues_id))
-        else:
-            items.append('Error no items found', 'Error')
-        self.__log('Finished getMusicIssues')
-        return items
+                self.__log('issues_id: ' + issues_id.encode('utf-8'))
 
-    '''
-    returns list with movie issues 
-''' 
-    def getMovieIssues(self, html):        
-        self.__log('Start getMovieIssues')
-        self.__log('html: ' + html)
-        items = []
-        jsonResponse = json.loads(html)
-        log("getMusicIssues json response: " + str(jsonResponse))
-        if len(jsonResponse['prods']) > 0:
-            for item in jsonResponse['prods']:
-                issues_name = item[0]['issues_name']
-                issues_url = item[0]['issues_url']
-                issues_id = item[0]['issues_id']
-                product_duration = item[0]['product_duration']
-                self.__log('issues_name: ' + issues_name.encode('utf-8'))
-                self.__log('issues_id: ' + issues_id)
-                self.__log('product_name (issues_url): ' + issues_url.encode('utf-8'))
+                if issues_url:
+                    issues_name = issues_name.encode('utf-8') + ' - ' + issues_url.encode('utf-8')
+                    self.__log('issues_url: ' + issues_url.encode('utf-8'))
+                elif issues_date_aired_original:
+                    issues_name = issues_name.encode('utf-8') + ' (' + issues_date_aired_original.encode('utf-8') + ') '
+                    self.__log('issues_date_aired_original: ' + issues_date_aired_original.encode('utf-8'))
+                else:
+                    issues_name = issues_name.encode('utf-8')
+
                 self.__log('product_duration: ' + product_duration)
                 items.append(
-                    (issues_name.encode('utf-8') + ' - ' +issues_url.encode('utf-8'), issues_id))
-                #items.append((issues_url.decode('unicode_escape','ignore').encode('utf-8')+' '+issues_date_aired, issues_id))
+                    (issues_name, issues_id))
         else:
             items.append('Error no items found', 'Error')
-        self.__log('Finished getMovieIssues')
         return items
-  
-    '''
-    returns the json response to an issue_id
-'''
-    def getJsonFromIssueID(self,issue_id):
-        self.__log('Start getJsonFromIssueID')
-        self.__log('issue_id: ' + issue_id)
-        self.logIn()
-        stream = self.openContentStream(self.CONTENTURL+self.GETSTREAM,'issue_id=' + issue_id)
-        self.__log('Issue json response: ' + stream)
-        self.__log('Finished getJsonFromIssueID')
-        return stream
 '''
     end of neterratv class
 '''
@@ -413,13 +321,13 @@ returns true if login successful
 '''
 
 '''
-    play video stream
+    Play video stream
 '''
 def playVideoStream(tv_username, tv_password, issue_id, tvstation_name):
     log('Start playVideoStream')
     # get a neterra class
     Neterra = neterra(tv_username, tv_password)
-    html = Neterra.getJsonFromIssueID(issue_id)
+    html = Neterra.openContentStream(Neterra.CONTENTURL+Neterra.GETSTREAM,'issue_id=' + issue_id)
     jsonResponse = json.loads(html)
     log('playVideoStream json response: ' + str(jsonResponse))
     # parse html for flashplayer link
@@ -450,7 +358,6 @@ def showTVStations(tv_username, tv_password):
     #get a neterra class
     Neterra = neterra(tv_username, tv_password)
     log('Finished showTVStations')
-    Neterra.openContentStream(neterra.CONTENTURL+neterra.USEROPTION,neterra.USEROPTIONLIVE)
     #return list of all TV stations
     return Neterra.getTVStreams(Neterra.openContentStream(neterra.CONTENTURL+neterra.LIVE,neterra.DEFAULTPOSTSETTINGS))
 
@@ -462,11 +369,9 @@ def showVODStations(tv_username, tv_password):
     #get a neterra class
     Neterra = neterra(tv_username, tv_password)
     #call the URL to switch userview to small icons    
-    Neterra.openContentStream(neterra.CONTENTURL+neterra.USEROPTION,neterra.USEROPTIONVOD)
     log('Finished showVODTVStations')
     #return list of all VOD TV's
     return Neterra.getVODStations(Neterra.openContentStream(neterra.CONTENTURL+neterra.VOD,neterra.DEFAULTPOSTSETTINGS))
-
 
 '''
     returns list of available Music products
@@ -475,10 +380,9 @@ def showMusicProds(tv_username, tv_password):
     log('Start showMusicProds')
     #get a neterra class
     Neterra = neterra(tv_username, tv_password)
-    Neterra.openContentStream(neterra.CONTENTURL+neterra.USEROPTION,neterra.USEROPTIONMUSIC)
     log('Finished showMusicProds')
     #return list of all prods for music
-    return Neterra.getMusicProds(Neterra.openContentStream(neterra.CONTENTURL+neterra.MUSIC,neterra.DEFAULTPOSTSETTINGS))
+    return Neterra.getVODProds(Neterra.openContentStream(neterra.CONTENTURL+neterra.MUSIC,neterra.DEFAULTPOSTSETTINGS))
 
 '''
     returns list of available timeshift products
@@ -487,7 +391,6 @@ def showTimeshiftProds(tv_username, tv_password):
     log('Start showTimeshiftProds')
     #get a neterra class
     Neterra = neterra(tv_username, tv_password)
-    Neterra.openContentStream(neterra.CONTENTURL+neterra.USEROPTION,neterra.USEROPTIONTIMESHIFT)
     log('Finished showTimeshiftProds')
     #return list of all prods for music
     return Neterra.getTVStreams(Neterra.openContentStream(neterra.CONTENTURL+neterra.TIMESHIFT,neterra.DEFAULTPOSTSETTINGS))
@@ -498,10 +401,9 @@ def showTimeshiftProds(tv_username, tv_password):
 def showMovieProds(tv_username, tv_password):
     log('Start showMovieProds')
     #get a neterra class
-    Neterra = neterra(tv_username, tv_password)    
-    Neterra.openContentStream(neterra.CONTENTURL+neterra.USEROPTION,neterra.USEROPTIONMOVIES)
+    Neterra = neterra(tv_username, tv_password)
     log('Finished showMovieProds')
-    return Neterra.getMovieProds(Neterra.openContentStream(neterra.CONTENTURL+neterra.MOVIES,neterra.DEFAULTPOSTSETTINGS))
+    return Neterra.getVODProds(Neterra.openContentStream(neterra.CONTENTURL+neterra.MOVIES,neterra.DEFAULTPOSTSETTINGS))
 
 '''
     returns list of available VOD products like shows or series for selected_ID (prod ID)
@@ -510,7 +412,6 @@ def showVODProds(selected_ID,tv_username, tv_password):
     log('Start showVODProds')
     #get a neterra class
     Neterra = neterra(tv_username, tv_password)
-    Neterra.openContentStream(neterra.CONTENTURL+neterra.USEROPTION,neterra.USEROPTIONVOD)
     log('Finished showVODProds')
     #return list of all prods for VOD
     return Neterra.getVODProds(Neterra.openContentStream(neterra.CONTENTURL+neterra.PRODS,neterra.DEFAULTPOSTSETTINGS+'&id='+selected_ID))
@@ -522,33 +423,9 @@ def showVODIssues(selected_ID,tv_username, tv_password):
     log('Start showVODIssues')
     #get a neterra class
     Neterra = neterra(tv_username, tv_password)
-    Neterra.openContentStream(neterra.CONTENTURL+neterra.USEROPTION,neterra.USEROPTIONVODIUSSUES)
     log('Finished showVODIssues')
     #return list of all prods for VOD
     return Neterra.getVODIssues(Neterra.openContentStream(neterra.CONTENTURL+neterra.ISSUES,neterra.DEFAULTPOSTSETTINGS+'&id='+selected_ID))
-
-'''
-    returns list of available issues for the selected_ID (issue id)
-'''
-def showMusicIssues(selected_ID,tv_username, tv_password):
-    log('Start showMusicIssues')
-    #get a neterra class
-    Neterra = neterra(tv_username, tv_password)
-    Neterra.openContentStream(neterra.CONTENTURL+neterra.USEROPTION,neterra.USEROPTIONMUSICISSUES)
-    log('Finished showMusicIssues')
-    #return list of all prods for VOD
-    return Neterra.getMusicIssues(Neterra.openContentStream(neterra.CONTENTURL+neterra.ISSUES,neterra.DEFAULTPOSTSETTINGS+'&id='+selected_ID))
-
-'''
-    returns list of available issues for the selected_ID (issue id)
-'''
-def showMovieIssues(selected_ID,tv_username, tv_password):
-    log('Start showMovieIssues')
-    #get a neterra class
-    Neterra = neterra(tv_username, tv_password)    
-    log('Finished showMovieIssues')
-    #return list of all prods for VOD
-    return Neterra.getMovieIssues(Neterra.openContentStream(neterra.CONTENTURL+neterra.ISSUES,neterra.DEFAULTPOSTSETTINGS+'&id='+selected_ID))
 
 '''
     public log method
@@ -560,4 +437,3 @@ def log(text):
     else:
         if(DEBUG == True):
             xbmc.log('%s libname: %s' % (LIBNAME, text))
-            

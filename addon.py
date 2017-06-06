@@ -51,7 +51,16 @@ __id__ = 'plugin.video.neterratv'
 
 username = ""
 password = ""
-   
+
+class VideoType:
+    LIVE = 'live'
+    VOD = 'vod'
+    PRODS = 'prods'
+    ISSUES = 'issues'
+    MUSIC = 'music'
+    TIMESHIFT = 'timeshift'
+    MOVIES = 'movies'
+
 thisPlugin = int(sys.argv[1])
 
 THUMBNAIL_VIEW_IDS = {'skin.confluence': 500,
@@ -117,15 +126,15 @@ def main_menu():
         
     items=[]
     items.append({'label': u'TV на ЖИВО',
-                  'url': plugin.url_for('tvlistlive',id_type='live')})
+                  'url': plugin.url_for('tvlistlive',id_type=VideoType.LIVE)})
     items.append({'label': u'TV на ЗАПИС',
-                  'url': plugin.url_for('tvlistlive',id_type='vod')})
+                  'url': plugin.url_for('tvlistlive',id_type=VideoType.VOD)})
     items.append({'label': u'МУЗИКА',
-                  'url': plugin.url_for('tvlistlive',id_type='music')})
+                  'url': plugin.url_for('tvlistlive',id_type=VideoType.MUSIC)})
     items.append({'label': u'TIMESHIFT',
-                  'url': plugin.url_for('tvlistlive',id_type='timeshift')})
+                  'url': plugin.url_for('tvlistlive',id_type=VideoType.TIMESHIFT)})
     items.append({'label': u'ФИЛМИ',
-                  'url': plugin.url_for('tvlistlive',id_type='movies')})
+                  'url': plugin.url_for('tvlistlive',id_type=VideoType.MOVIES)})
     
     __log('main_menu finished')
     return plugin.add_items(items)
@@ -139,33 +148,33 @@ def tvlistlive(id_type):
     #get a list with the TV stations
     menulist=[]
     items=[]
-    if id_type =='live':
+    if id_type == VideoType.LIVE:
         menulist=neterratv.showTVStations(plugin.get_setting('username'), plugin.get_setting('password'))        
         if menulist:         
             for item in menulist:
                 items.append({'label': item[0],
                               'url': plugin.url_for('tvstation_playtv', tvstation_code=item[1], tvstation_name=item[0])})
-    if id_type =='vod':
+    if id_type == VideoType.VOD:
         menulist=neterratv.showVODStations(plugin.get_setting('username'), plugin.get_setting('password'))        
         if menulist:         
             for item in menulist:
                 items.append({'label': item[0],
                               'url': plugin.url_for('show_recordedlist',tvstation_code=item[1])})
-    if id_type =='music':
+    if id_type == VideoType.MUSIC:
         menulist=neterratv.showMusicProds(plugin.get_setting('username'), plugin.get_setting('password'))
         if menulist:         
             for item in menulist:
                 items.append({'label': item[0],
                               'url': plugin.url_for('show_musicstreams',tvstation_code=item[1])})
     
-    if id_type =='timeshift':        
+    if id_type == VideoType.TIMESHIFT:
         menulist=neterratv.showTimeshiftProds(plugin.get_setting('username'), plugin.get_setting('password'))       
         if menulist:         
             for item in menulist:
                 items.append({'label': item[0],
                               'url': plugin.url_for('tvstation_playtv',tvstation_code=item[1], tvstation_name=item[0])})
         
-    if id_type =='movies':
+    if id_type == VideoType.MOVIES:
         menulist=neterratv.showMovieProds(plugin.get_setting('username'), plugin.get_setting('password'))        
         if menulist:         
             for item in menulist:
@@ -213,14 +222,8 @@ def show_recordedlist(tvstation_code):
     stations = neterratv.showVODProds(tvstation_code, username, password)
     
     items=[]
-    i=0
     for station in stations:
-        if i==0:
-            items=[{'label': station[0],
-                    'url': plugin.url_for('show_recordedstreams',tvstation_code=station[1])}]
-            i=i+1
-        else:
-            items.append({'label': station[0],
+        items.append({'label': station[0],
                     'url': plugin.url_for('show_recordedstreams',tvstation_code=station[1])})
 
     __log('show_recordedlist finished with string=%s' % tvstation_code)
@@ -240,14 +243,8 @@ def show_recordedstreams(tvstation_code):
     stations = neterratv.showVODIssues(tvstation_code, username, password)
     
     items=[]
-    i=0
     for station in stations:
-        if i==0:
-            items=[{'label': station[0],
-                    'url': plugin.url_for('issue_play',tvstation_code=station[1], tvstation_name=station[0])}]
-            i=i+1
-        else:
-            items.append({'label': station[0],
+        items.append({'label': station[0],
                     'url': plugin.url_for('issue_play',tvstation_code=station[1], tvstation_name=station[0])})
 
     __log('show_recordedstreams with string=%s' % tvstation_code)
@@ -264,17 +261,11 @@ def show_musicstreams(tvstation_code):
     username = plugin.get_setting('username')
     password = plugin.get_setting('password')
     
-    stations = neterratv.showMusicIssues(tvstation_code, username, password)
+    stations = neterratv.showVODIssues(tvstation_code, username, password)
     
     items=[]
-    i=0
     for station in stations:
-        if i==0:
-            items=[{'label': station[0],
-                    'url': plugin.url_for('issue_play',tvstation_code=station[1], tvstation_name=station[0])}]
-            i=i+1
-        else:
-            items.append({'label': station[0],
+        items.append({'label': station[0],
                     'url': plugin.url_for('issue_play',tvstation_code=station[1], tvstation_name=station[0])})
 
     __log('show_musicstreams with string=%s' % tvstation_code)
@@ -292,49 +283,13 @@ def show_movielist(tvstation_code):
     username = plugin.get_setting('username')
     password = plugin.get_setting('password')
     
-    stations = neterratv.showMovieIssues(tvstation_code, username, password)
+    stations = neterratv.showVODIssues(tvstation_code, username, password)
 
     items=[]
-    i=0
     for station in stations:
-        if i==0:
-            items=[{'label': station[0],
-                    'url': plugin.url_for('issue_play',tvstation_code=station[1], tvstation_name=station[0])}]
-            i=i+1
-        else:
-            items.append({'label': station[0],
-                    'url': plugin.url_for('issue_play',tvstation_code=station[1], tvstation_name=station[0])})
-
+        items.append({'label': station[0],
+                      'url': plugin.url_for('issue_play', tvstation_code=station[1], tvstation_name=station[0])})
     __log('show_movielist with string=%s' % tvstation_code)
-    return plugin.add_items(items)
-
-
-
-'''
-    gets available timeshift streams given code and adds to list 
-'''
-@plugin.route('/show_timeshiftstream/<tvstation_code>')
-def show_timeshiftstreams(tvstation_code):
-    
-    __log('show_timeshiftstreams start')
-
-    username = plugin.get_setting('username')
-    password = plugin.get_setting('password')
-    
-    stations = neterratv.showMusicIssues(tvstation_code, username, password)
-    
-    items=[]
-    i=0
-    for station in stations:
-        if i==0:
-            items=[{'label': station[0],
-                    'url': plugin.url_for('issue_play',tvstation_code=station[1])}]
-            i=i+1
-        else:
-            items.append({'label': station[0],
-                    'url': plugin.url_for('issue_play',tvstation_code=station[1])})
-
-    __log('show_timeshiftstreams with string=%s' % tvstation_code)
     return plugin.add_items(items)
 
 '''
