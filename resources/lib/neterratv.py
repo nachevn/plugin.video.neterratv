@@ -307,7 +307,7 @@ returns list with VOD issues
 
                 self.__log('product_duration: ' + product_duration)
                 items.append(
-                    (issues_name, issues_id))
+                    (issues_name, issues_id, product_duration))
         else:
             items.append('Error no items found', 'Error')
         return items
@@ -323,7 +323,7 @@ returns list with VOD issues
 '''
     Play video stream
 '''
-def playVideoStream(tv_username, tv_password, issue_id, tvstation_name):
+def playVideoStream(tv_username, tv_password, issue_id, tvstation_name, stream_duration):
     log('Start playVideoStream')
     # get a neterra class
     Neterra = neterra(tv_username, tv_password)
@@ -344,6 +344,9 @@ def playVideoStream(tv_username, tv_password, issue_id, tvstation_name):
     log('tcUrl: ' + tcUrl)
     playUrl = tcUrl + ' ' + neterra.SWFPLAYERURL + ' playpath=' + playpath + ' ' + neterra.SWFPAGEURL + ' ' + neterra.SWfVfy + ' live=' + isLive + ' ' + neterra.SWFBUFFERDEFAULT
     listitem = xbmcgui.ListItem(label=str(tvstation_name))
+    if stream_duration:
+        log("Stream duration: " + str(stream_duration))
+        listitem.setInfo('video', { 'title': tvstation_name, 'duration': stream_duration})
     xbmc.Player().play(playUrl, listitem)
     log('URL: ' + playUrl)
     log('Finished playVideoStream')

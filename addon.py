@@ -196,17 +196,17 @@ def tvstation_playtv(tvstation_code, tvstation_name):
     __log('tvstation_playtv started with tvstation_name=%s' %  tvstation_name)
     __log('tvstation_playtv started with tvstation_code=%s' % tvstation_code)
            
-    neterratv.playVideoStream(plugin.get_setting('username'), plugin.get_setting('password'),tvstation_code, tvstation_name)
+    neterratv.playVideoStream(plugin.get_setting('username'), plugin.get_setting('password'),tvstation_code, tvstation_name, '')
 
 '''
     plays the selected issue
 '''
-@plugin.route('/issue_play/<tvstation_code>/<tvstation_name>')
-def issue_play(tvstation_code, tvstation_name):
+@plugin.route('/issue_play/<tvstation_code>/<tvstation_name>/<duration>')
+def issue_play(tvstation_code, tvstation_name, duration):
     
     __log('issue_play started with string=%s' % tvstation_code)
            
-    neterratv.playVideoStream(plugin.get_setting('username'), plugin.get_setting('password'),tvstation_code, tvstation_name)
+    neterratv.playVideoStream(plugin.get_setting('username'), plugin.get_setting('password'),tvstation_code, tvstation_name, duration)
 
 '''
     gets available recorded streams for select TV station and adds it to list
@@ -244,8 +244,10 @@ def show_recordedstreams(tvstation_code):
     
     items=[]
     for station in stations:
-        items.append({'label': station[0],
-                    'url': plugin.url_for('issue_play',tvstation_code=station[1], tvstation_name=station[0])})
+        b = station[2].split(':')
+        vodDuration = int(b[0]) * 3600 + int(b[1]) * 60 + int(b[2])
+        items.append({'label': station[0], 'is_folder' : False, 'info': {'title': station[0], 'duration': vodDuration},
+                      'url': plugin.url_for('issue_play', tvstation_code=station[1], tvstation_name=station[0], duration=station[2])})
 
     __log('show_recordedstreams with string=%s' % tvstation_code)
     return plugin.add_items(items)
@@ -265,8 +267,10 @@ def show_musicstreams(tvstation_code):
     
     items=[]
     for station in stations:
-        items.append({'label': station[0],
-                    'url': plugin.url_for('issue_play',tvstation_code=station[1], tvstation_name=station[0])})
+        b = station[2].split(':')
+        vodDuration = int(b[0]) * 3600 + int(b[1]) * 60 + int(b[2])
+        items.append({'label': station[0], 'is_folder' : False, 'info': {'duration': vodDuration},
+                      'url': plugin.url_for('issue_play', tvstation_code=station[1], tvstation_name=station[0], duration=station[2])})
 
     __log('show_musicstreams with string=%s' % tvstation_code)
     return plugin.add_items(items)
@@ -287,8 +291,10 @@ def show_movielist(tvstation_code):
 
     items=[]
     for station in stations:
-        items.append({'label': station[0],
-                      'url': plugin.url_for('issue_play', tvstation_code=station[1], tvstation_name=station[0])})
+        b = station[2].split(':')
+        vodDuration = int(b[0]) * 3600 + int(b[1]) * 60 + int(b[2])
+        items.append({'label': station[0], 'is_folder' : False, 'info': {'duration': vodDuration},
+                      'url': plugin.url_for('issue_play', tvstation_code=station[1], tvstation_name=station[0], duration=station[2])})
     __log('show_movielist with string=%s' % tvstation_code)
     return plugin.add_items(items)
 
